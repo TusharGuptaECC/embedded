@@ -26,7 +26,7 @@
 #include "lcd.h"						// LCD Header file included that contains function definitions essential to deal with LCD
 
 //------------------------------------ Global Variables ---------------------------------------------------
-
+int i=0,j;
 unsigned char pattern_e[8] = {
 	0b00011111,						
 	0b00010001,
@@ -38,58 +38,18 @@ unsigned char pattern_e[8] = {
 	0b00000000
 };
 
-unsigned char pattern_sin1[8] = {
-	0b00000011,
-	0b00000100,
-	0b00001000,
-	0b00010000,
-	0b00000000,
-	0b00000000,
-	0b00000000,
-	0b00000000,
-};
 
-unsigned char pattern_sin2[8] = {
-	0b00011000,
-	0b00000100,
-	0b00000010,
-	0b00000001,
-	0b00000000,
-	0b00000000,
-	0b00000000,
-	0b00000000,
-};
 
-unsigned char pattern_sin3[8] = {
-	0b00000000,
-	0b00000000,
-	0b00000000,
-	0b00000000,
-	0b00010000,
-	0b00001000,
-	0b00000111,
-	0b00000000,
-};
 
-unsigned char pattern_sin4[8] = {
-	0b00000000,
-	0b00000000,
-	0b00000000,
-	0b00000000,
-	0b00000001,
-	0b00000010,
-	0b00011100,
-	0b00000000,
-};
 
 //------------------------------------ FUNCTIONS ---------------------------------------------------
 
-void lcdWrData(unsigned char);
+
 
 /**
 * @brief      Store the custom characters at CGRAM location.<br>
 *		       
-* @details    This function stores the 8 byte pattern at the CGRAM memory.<br>
+* @details    This function stores the 8 byte pattern at the CGRAM memort.<br>
 *
 * @param[in]  loc  			The address of CGRAM 1 - 7
 * 			  *pattern 		Base address of array where the pattern is stored
@@ -102,15 +62,15 @@ void lcd_custom_char (unsigned char loc, unsigned char *pattern)
 	<< TODO >> :
 		Command 0x40 and onwards to force the device to point CGRAM address
 	    Write 8 byte for generation of the custom character 
-	*/
-		lcd_wr_command(0x40+loc*8);
-		
-		int i=0;
-		while(i<8)
-		{
-			lcdWrData(pattern[i]);
-			i++;
-		}
+	*/	
+	lcd_wr_command(0x40+loc*8);
+	
+	//int i=0;
+	while(i<8)
+	{
+		lcd_wr_char(0,0,pattern[i]);
+		i++;
+	}
 }
 
 
@@ -131,12 +91,8 @@ void Display_logo()
 		Use the binary pattern stored in pattern_e array<br> 
 *		and pass the base address of array to the lcd_custom_char function.
 	*/
-	
-	lcd_custom_char(0,pattern_e);
-	lcd_wr_command(0x80);
-	lcd_cursor(2,8);
-	lcdWrData(0x00);
-	//_delay_ms(2000);
+	lcd_custom_char(0x00,pattern_e);
+	lcd_wr_char(2,8,0x00);
 }
 
 /**
@@ -147,7 +103,41 @@ void Display_logo()
 */		
 void Display_sine_wave()
 {
-	int j;
+	unsigned char pattern_sin[32] = {
+		0b00000011,
+		0b00000100,
+		0b00001000,
+		0b00010000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00011000,
+		0b00000100,
+		0b00000010,
+		0b00000001,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00010000,
+		0b00001000,
+		0b00000111,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000001,
+		0b00000010,
+		0b00011100,
+		0b00000000,
+	};
+	
 	lcd_string(1,3,"Sine Wave");
 	_delay_ms(2000);
 	lcd_clear();						// Clear the LCD
@@ -158,48 +148,26 @@ void Display_sine_wave()
 		Store the binary patterns for positive and negative cycle of sine wave in an array<br> 
 *		and pass the base address of array to the lcd_custom_char function.
 	*/
-	lcd_custom_char(1,pattern_sin1);
-	lcd_custom_char(2,pattern_sin2);
-	lcd_custom_char(3,pattern_sin3);
-	lcd_custom_char(4,pattern_sin4);
-	lcd_wr_command(0x80);
-	for (j=1;j<=16;j++)
+	lcd_custom_char(0x01,pattern_sin);
+	//i=1;
+	for (j=1;j<=15;j+=4)
 	{
-		
-		lcdWrData(0x01);
-		lcdWrData(0x02);
-		lcdWrData(0x03);
-		lcdWrData(0x04);
+		lcd_wr_char(1,j,0x01);
+		lcd_wr_char(1,j+1,0x02);
+		lcd_wr_char(1,j+2,0x03);
+		lcd_wr_char(1,j+3,0x04);
 		_delay_ms(5);
 	}
-	_delay_ms(2000);
-}
-
-void lcdWrData(unsigned char data)
-{
-	unsigned char temp;
+	for (j=1;j<=15;j+=4)
+	{
+		lcd_wr_char(2,j,0x01);
+		lcd_wr_char(2,j+1,0x02);
+		lcd_wr_char(2,j+2,0x03);
+		lcd_wr_char(2,j+3,0x04);
+		_delay_ms(5);
+	}
 	
-	temp = data;
-	temp = (temp & 0xF0);
-	lcd_data_port_reg &= 0x0F;
-	lcd_data_port_reg |= temp;
 	
-	lcd_control_port_reg |= (1<<RS_pin);				// RS = 1 --- data Input
-	lcd_control_port_reg &= ~(1<<RW_pin);				// RW = 0 --- Writing to LCD
-	lcd_control_port_reg |= (1<<EN_pin);				// Set Enable Pin
-	_delay_ms(5);										// Delay
-	lcd_control_port_reg &= ~(1<<EN_pin);				// Clear Enable Pin
-	
-	data = (data & 0x0F);
-	data = (data << 4);
-	lcd_data_port_reg &= 0x0F;
-	lcd_data_port_reg |= data;
-	
-	lcd_control_port_reg |= (1<<RS_pin);				// RS = 1 --- data Input
-	lcd_control_port_reg &= ~(1<<RW_pin);				// RW = 0 --- Writing to LCD
-	lcd_control_port_reg |= (1<<EN_pin);				// Set Enable Pin
-	_delay_ms(5);										// Delay
-	lcd_control_port_reg &= ~(1<<EN_pin);				// Clear Enable Pin
 }
 
 
@@ -217,9 +185,30 @@ void lcdWrData(unsigned char data)
 	lcd_clear();						// Clear the LCD
     
 	Display_logo();
+	//lcd_wr_command(0x80);
+	//lcd_cursor(2,8);
+	//lcdWrData(0x00);
+	lcd_wr_char(2,8,0x00);
 	_delay_ms(2000);
 	lcd_clear();						// Clear the LCD
 	Display_sine_wave();
+	//lcd_wr_command(0x80);
+	/*for (j=1;j<=15;j+=4)
+	{
+		lcd_wr_char(1,j,0x01);
+		lcd_wr_char(1,j+1,0x02);
+		lcd_wr_char(1,j+2,0x03);
+		lcd_wr_char(1,j+3,0x04);
+		_delay_ms(5);
+	}
+	for (j=1;j<=15;j+=4)
+	{
+		lcd_wr_char(2,j,0x01);
+		lcd_wr_char(2,j+1,0x02);
+		lcd_wr_char(2,j+2,0x03);
+		lcd_wr_char(2,j+3,0x04);
+		_delay_ms(5);
+	}*/
 	_delay_ms(2000);
 	lcd_clear();						// Clear the LCD
 	

@@ -1,3 +1,17 @@
+/*
+    RS-----pin12
+    RW-----pin11
+    E -----pin10
+    D0-----pin9     D7  pin2
+    D1-----pin8     D6  pin3
+    D2-----pin7     D5  pin4
+    D3-----pin6     D4  pin5
+    D4-----pin5     D3  pin6
+    D5-----pin4     D2  pin7
+    D6-----pin3     D1  pin8
+    D7-----pin2     D0  pin9
+*/
+
 #include<avr/io.h>
 #include<util/delay.h>
 
